@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>对白的工作台</title>
+
+<style>
+/* ============== 对白的工作台 ============== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #fdf6e3 0%, #f5e6c8 50%, #e8d5b0 100%);
+  color: #3a2e1f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.app { display: flex; min-height: 100vh; }
+
+/* ===== 侧边栏 ===== */
+.sidebar {
+  width: 200px;
+  background: linear-gradient(180deg, #4a3c28 0%, #5a4a32 100%);
+  color: #f5e6c8;
+  padding: 24px 0;
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column;
+}
+.brand {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid rgba(245, 230, 200, 0.15);
+  margin-bottom: 16px;
+}
+.brand-logo {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #d4a574, #b8895a);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px;
+  color: #3a2e1f;
+  margin-bottom: 8px;
+}
+.brand-name { font-size: 16px; font-weight: 600; letter-spacing: 1px; }
+.nav { flex: 1; padding: 0 8px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  color: #e8d5b0;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-item:hover { background: rgba(245, 230, 200, 0.08); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.25), rgba(184, 137, 90, 0.2));
+  color: #f5e6c8;
+  font-weight: 600;
+}
+.nav-item .ico { font-size: 18px; }
+
+/* ===== 主区 ===== */
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.panel-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(74, 60, 40, 0.15);
+}
+.head-left { display: flex; flex-direction: column; gap: 4px; }
+.badge-today {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  background: rgba(212, 165, 116, 0.2);
+  border-radius: 16px;
+  font-size: 12px;
+  color: #6b5436;
+  width: fit-content;
+}
+.head-title { font-size: 24px; font-weight: 700; color: #3a2e1f; }
+.head-meta { font-size: 13px; color: #8a7355; }
+
+/* ===== 卡片 ===== */
+.card {
+  background: rgba(255, 252, 245, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(74, 60, 40, 0.06);
+}
+.card h3 { font-size: 15px; margin-bottom: 14px; color: #5a4a32; font-weight: 600; }
+.card p.hint { font-size: 13px; color: #8a7355; margin-bottom: 10px; }
+
+input[type="text"], textarea, select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 252, 245, 0.8);
+  color: #3a2e1f;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+}
+input[type="text"]:focus, textarea:focus, select:focus { border-color: #b8895a; }
+
+/* ===== 按钮 ===== */
+.primary-btn {
+  background: linear-gradient(135deg, #d4a574, #b8895a);
+  color: #3a2e1f;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.primary-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(184, 137, 90, 0.3); }
+.ghost-btn {
+  background: transparent;
+  color: #6b5436;
+  border: 1px solid rgba(212, 165, 116, 0.4);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ghost-btn:hover { background: rgba(212, 165, 116, 0.1); border-color: #b8895a; }
+.action-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+/* ===== 任务清单 ===== */
+.task-list { list-style: none; }
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(212, 165, 116, 0.2);
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 20px; height: 20px;
+  border: 2px solid #b8895a;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  transition: all 0.15s;
+}
+.task-check.done { background: #b8895a; color: #fdf6e3; }
+.task-text { flex: 1; font-size: 14px; }
+.task-text.done { text-decoration: line-through; opacity: 0.5; }
+.task-del {
+  color: #b8895a; cursor: pointer; opacity: 0.5;
+  background: none; border: none; font-size: 14px;
+}
+.task-del:hover { opacity: 1; }
+.progress-bar {
+  height: 6px; background: rgba(212, 165, 116, 0.2);
+  border-radius: 3px; margin-top: 8px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d4a574, #b8895a);
+  transition: width 0.3s;
+  border-radius: 3px;
+}
+
+/* ===== 工具网格 ===== */
+.tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.tool-grid.wide { grid-template-columns: repeat(3, 1fr); }
+.tool-btn {
+  padding: 16px;
+  background: rgba(255, 252, 245, 0.8);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #5a4a32;
+  transition: all 0.15s;
+}
+.tool-btn:hover { background: rgba(212, 165, 116, 0.15); transform: translateY(-1px); }
+
+/* ===== Chip 标签 ===== */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.chip {
+  padding: 6px 14px;
+  background: rgba(212, 165, 116, 0.15);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.chip:hover { background: rgba(212, 165, 116, 0.25); }
+.chip.on {
+  background: linear-gradient(135deg, #d4a574, #b8895a);
+  color: #3a2e1f;
+  font-weight: 600;
+}
+
+.param-row { display: flex; gap: 16px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.param-row label { font-size: 13px; color: #6b5436; }
+.param-row select { width: auto; min-width: 140px; }
+
+/* ===== 选题列表 ===== */
+.topic-list { list-style: none; }
+.topic-item {
+  padding: 14px;
+  background: rgba(255, 252, 245, 0.6);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border-left: 3px solid #d4a574;
+}
+.topic-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.topic-meta { font-size: 12px; color: #8a7355; display: flex; gap: 12px; }
+.topic-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.topic-actions { margin-top: 8px; display: flex; gap: 8px; }
+
+.source-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.source-tag {
+  padding: 4px 12px;
+  background: rgba(212, 165, 116, 0.15);
+  border-radius: 16px;
+  font-size: 12px;
+  color: #6b5436;
+}
+
+/* ===== 输出块 ===== */
+.output-block {
+  padding: 14px 16px;
+  background: rgba(245, 230, 200, 0.4);
+  border-radius: 10px;
+  font-size: 14px;
+  white-space: pre-wrap;
+  min-height: 60px;
+  border-left: 3px solid #b8895a;
+  line-height: 1.7;
+}
+.output-block.empty { color: #b8895a; font-style: italic; opacity: 0.7; }
+
+/* ===== 复盘表 ===== */
+.review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.review-table th, .review-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+}
+.review-table th { font-weight: 600; color: #6b5436; background: rgba(245, 230, 200, 0.3); }
+
+/* ===== 读书 ===== */
+.book-list { list-style: none; margin-bottom: 14px; }
+.book-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  background: rgba(245, 230, 200, 0.4);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.book-name { font-weight: 600; }
+.book-progress { font-size: 12px; color: #8a7355; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 880px) {
+  .app { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; padding: 12px 0; }
+  .nav { display: flex; overflow-x: auto; padding: 0 8px; }
+  .nav-item { white-space: nowrap; }
+  .main { padding: 20px 16px; max-height: none; }
+  .tool-grid, .tool-grid.wide { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">对白</div>
+      <div class="brand-name">工作台</div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" data-tab="plan"><span class="ico">📅</span><span>每日计划</span></a>
+      <a class="nav-item" data-tab="write"><span class="ico">✍️</span><span>每日写作</span></a>
+      <a class="nav-item" data-tab="topic"><span class="ico">💡</span><span>选题灵感</span></a>
+      <a class="nav-item" data-tab="remix"><span class="ico">🔥</span><span>爆款二创</span></a>
+      <a class="nav-item" data-tab="review"><span class="ico">📊</span><span>内容复盘</span></a>
+      <a class="nav-item" data-tab="read"><span class="ico">📖</span><span>为己读书</span></a>
+      <a class="nav-item" data-tab="tools"><span class="ico">⚡</span><span>快捷工具</span></a>
+      <a class="nav-item" data-tab="more"><span class="ico">⋯</span><span>更多</span></a>
+    </nav>
+  </aside>
+
+  <!-- 主体 -->
+  <main class="main">
+    <!-- 每日计划 -->
+    <section class="panel active" id="plan">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="badge-today">📅 <span id="todayDate"></span></div>
+          <div class="head-title">今天要做的事</div>
+          <div class="head-meta"><span id="todayProgress">0/0</span> 已完成</div>
+        </div>
+        <button class="primary-btn" id="genTodayPlan">✨ 生成今日计划</button>
+      </div>
+
+      <div class="card">
+        <h3>今日任务清单</h3>
+        <ul class="task-list" id="taskList"></ul>
+      </div>
+
+      <div class="card">
+        <h3>快捷工具</h3>
+        <div class="tool-grid">
+          <button class="tool-btn" data-tool="topic">🎯 选题灵感</button>
+          <button class="tool-btn" data-tool="remix">🔥 爆款拆解</button>
+          <button class="tool-btn" data-tool="write">✍️ 写口播脚本</button>
+          <button class="tool-btn" data-tool="review">📊 今日复盘</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 每日写作 -->
+    <section class="panel" id="write">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">每日写作 · 情感赛道</div>
+          <div class="head-meta">60–90 秒口播脚本 · 直接可用</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📝 选题</h3>
+        <input type="text" id="writeTopic" placeholder="比如：老公冷暴力，离婚还是忍？">
+      </div>
+      <div class="card">
+        <h3>🎯 情感立场（多选）</h3>
+        <div class="chip-row" id="stanceChips">
+          <span class="chip" data-stance="女性成长">女性成长</span>
+          <span class="chip" data-stance="独立">独立</span>
+          <span class="chip" data-stance="止损">止损</span>
+          <span class="chip" data-stance="和解">和解</span>
+          <span class="chip" data-stance="自爱">自爱</span>
+          <span class="chip" data-stance="觉醒">觉醒</span>
+          <span class="chip" data-stance="边界感">边界感</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>⚙️ 生成参数</h3>
+        <div class="param-row">
+          <label>时长</label>
+          <select id="writeDuration">
+            <option value="60">60 秒</option>
+            <option value="75" selected>75 秒</option>
+            <option value="90">90 秒</option>
+          </select>
+          <label>风格</label>
+          <select id="writeStyle">
+            <option>对话感</option>
+            <option selected>观点输出</option>
+            <option>故事化</option>
+            <option>犀利</option>
+            <option>温柔</option>
+          </select>
+        </div>
+        <button class="primary-btn" id="writeGo">✨ 生成口播脚本</button>
+      </div>
+      <div class="card">
+        <h3>📃 生成结果</h3>
+        <textarea id="writeOutput" rows="14" placeholder="点上方按钮生成，或直接在这里编辑..."></textarea>
+        <div class="action-row">
+          <button class="ghost-btn" id="copyScript">📋 复制</button>
+          <button class="ghost-btn" id="saveScript">💾 归档到知识库</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 选题灵感 -->
+    <section class="panel" id="topic">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">选题灵感 · 情感赛道低粉爆款</div>
+          <div class="head-meta">每日自动抓取 · 适配你的人设</div>
+        </div>
+        <button class="primary-btn" id="fetchTopics">🔄 刷新选题</button>
+      </div>
+      <div class="card">
+        <h3>🔥 低粉爆款候选（≤10w 粉）</h3>
+        <ul class="topic-list" id="topicList"></ul>
+      </div>
+      <div class="card">
+        <h3>📚 选题素材来源</h3>
+        <div class="source-row">
+          <span class="source-tag">抖音热点</span>
+          <span class="source-tag">情感评论区</span>
+          <span class="source-tag">婚姻/家庭话题</span>
+          <span class="source-tag">女性成长</span>
+          <span class="source-tag">人际边界</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 爆款二创 -->
+    <section class="panel" id="remix">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">爆款二创 · 情感赛道专用</div>
+          <div class="head-meta">还原 → 找漏洞 → 现代解法 → 新脚本</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📥 粘贴视频转写文字</h3>
+        <textarea id="remixInput" rows="8" placeholder="把博主的口播文字复制到这里..."></textarea>
+        <div class="action-row">
+          <button class="ghost-btn" id="clearRemix">清空</button>
+          <button class="primary-btn" id="remixGo">🚀 一键二创</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧠 1) 还原博主观点</h3>
+        <div class="output-block" id="outView">尚未生成</div>
+      </div>
+
+      <div class="card">
+        <h3>⚠️ 2) 找逻辑漏洞</h3>
+        <div class="output-block" id="outFlaw">尚未生成</div>
+      </div>
+
+      <div class="card">
+        <h3>💡 3) 现代婚姻解法</h3>
+        <div class="output-block" id="outFix">尚未生成</div>
+      </div>
+
+      <div class="card">
+        <h3>🎙️ 4) 60–90 秒口播脚本</h3>
+        <div class="output-block" id="outScript">尚未生成</div>
+        <div class="action-row">
+          <button class="ghost-btn" id="copyRemix">📋 复制脚本</button>
+          <button class="ghost-btn" id="sendRemixToWrite">✍️ 送到写作模块</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 内容复盘 -->
+    <section class="panel" id="review">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">内容复盘</div>
+          <div class="head-meta">每条视频发完 48h 后回填数据</div>
+        </div>
+        <button class="primary-btn" id="newReview">＋ 新增复盘</button>
+      </div>
+      <div class="card">
+        <h3>📋 近期复盘</h3>
+        <table class="review-table" id="reviewTable">
+          <thead>
+            <tr>
+              <th>日期</th><th>标题</th><th>播放</th><th>互动率</th><th>完播</th><th>判断</th><th>备注</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 为己读书 -->
+    <section class="panel" id="read">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">为己读书</div>
+          <div class="head-meta">今天读什么 · 读了多少</div>
+        </div>
+        <button class="primary-btn" id="newBook">＋ 选一本新书</button>
+      </div>
+      <div class="card">
+        <h3>📖 正在读</h3>
+        <ul class="book-list" id="bookList"></ul>
+      </div>
+      <div class="card">
+        <h3>🗒️ 读书笔记</h3>
+        <textarea id="bookNote" rows="6" placeholder="读到的金句 / 触动你的观点..."></textarea>
+        <div class="action-row">
+          <button class="ghost-btn" id="saveBookNote">💾 保存笔记</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 快捷工具 -->
+    <section class="panel" id="tools">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">快捷工具</div>
+          <div class="head-meta">高频动作一键直达</div>
+        </div>
+      </div>
+      <div class="tool-grid wide">
+        <button class="tool-btn" data-tool="plan">📅 生成今日计划</button>
+        <button class="tool-btn" data-tool="topic">🎯 刷新选题</button>
+        <button class="tool-btn" data-tool="remix">🔥 一键二创</button>
+        <button class="tool-btn" data-tool="write">✍️ 写脚本</button>
+        <button class="tool-btn" data-tool="review">📊 写复盘</button>
+        <button class="tool-btn" data-tool="read">📖 写读书笔记</button>
+      </div>
+    </section>
+
+    <!-- 更多 -->
+    <section class="panel" id="more">
+      <div class="panel-head">
+        <div class="head-left">
+          <div class="head-title">更多 · 每天学一点</div>
+          <div class="head-meta">瑜伽 / 英语 / 自学课件</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🧘‍♀️ 每日瑜伽</h3>
+        <p class="hint">把瑜伽跟练视频链接贴到下面，点击直达：</p>
+        <input type="text" id="yogaLink" placeholder="https://...（抖音/B站/腾讯视频）">
+      </div>
+      <div class="card">
+        <h3>🇬🇧 每日英语</h3>
+        <p class="hint">背单词 / 练一句话：</p>
+        <textarea id="enWord" rows="4" placeholder="word — 例句 — 我的造句"></textarea>
+      </div>
+      <div class="card">
+        <h3>📦 嵌入学习课件</h3>
+        <div class="source-row">
+          <span class="source-tag">自学笔记</span>
+          <span class="source-tag">剪辑教程</span>
+          <span class="source-tag">口播练声</span>
+          <span class="source-tag">账号运营</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+
+<script>
+/* ============== 对白工作台 · 数据与模板 ============== */
+// 情感赛道博主设定（对白的人设）
+window.DUIBAI = {
+  persona: {
+    name: '对白',
+    niche: '情感赛道 · 女性成长 · 现代婚姻',
+    audience: '25-40 岁已婚/恋爱中女性',
+    tone: '清醒、犀利、有温度、不端架子',
+    stance: ['先自爱再爱人', '关系里要看见自己', '不强求、不将就、不消耗']
+  },
+  dailyTopics: [
+    {
+      title: '老公出轨后说"再给我一次机会"，我该怎么回？',
+      angle: '不原谅也不是恨，而是用行动给答案',
+      hook: '一句话戳醒你：他道歉不是因为他后悔，是因为他怕。',
+      tags: ['婚姻', '出轨', '止损'],
+      heat: 9.2
+    },
+    {
+      title: '结婚 5 年，发现自己越来越像怨妇，怎么破？',
+      angle: '不是婚姻出问题，是你没给自己留出口',
+      hook: '一个动作：每天给自己 30 分钟只属于你的时间。',
+      tags: ['女性成长', '自爱', '边界感'],
+      heat: 8.8
+    },
+    {
+      title: '"我养你"是这世上最毒的情话',
+      angle: '主动放弃经济权 = 主动交出话语权',
+      hook: '钱是底气，不是数字。',
+      tags: ['独立', '女性成长'],
+      heat: 9.5
+    },
+    {
+      title: '婆婆不是妈，请别再自我感动',
+      angle: '保持礼貌、保持距离、保持钱包',
+      hook: '婆婆对你好不好，取决于你老公怎么翻译。',
+      tags: ['婆媳', '边界感'],
+      heat: 8.6
+    },
+    {
+      title: '冷战比吵架更可怕，因为它在消磨你',
+      angle: '冷战不是冷静，是冷暴力',
+      hook: '看清一个人不是看他怎么说，看他怎么在你最需要时选择消失。',
+      tags: ['冷暴力', '止损'],
+      heat: 9.0
+    },
+    {
+      title: '"离婚丢人"这四个字，害了多少女人',
+      angle: '离婚是止损不是失败，困在不合适的婚姻里才是',
+      hook: '比起"离过婚的女人"，更丢人的是"一直在忍的女人"。',
+      tags: ['离婚', '女性成长'],
+      heat: 9.3
+    }
+  ]
+};
+
+/**
+ * 情感赛道 · 二创模板生成器
+ * 输入：博主原文（情感视频转写文字）
+ * 输出：① 还原观点 ② 找漏洞 ③ 现代解法 ④ 60-90 秒脚本
+ */
+window.remixTemplate = function (raw) {
+  // ① 还原博主观点：抽取核心立场
+  const sentences = raw
+    .replace(/\s+/g, ' ')
+    .split(/[。！？!?]/)
+    .map(s => s.trim())
+    .filter(s => s.length > 6);
+
+  const core = sentences.slice(0, 3).join(' / ');
+  const view = [
+    '【博主核心立场】',
+    `▸ 主张概括：${core || '（原文过短，建议贴完整转写）'}`,
+    '▸ 情感基调：引发共鸣 + 给出明确判断',
+    '▸ 受众钩子：用"过来人"身份说"大实话"',
+    '',
+    '【一句话还原】',
+    '这位博主想告诉你的是：在关系里，放弃自我比失去对方更可怕。'
+  ].join('\n');
+
+  // ② 找逻辑漏洞：常见反驳维度
+  const flaw = [
+    '【常见逻辑漏洞】',
+    '1) 因果混淆：把"长期付出"等同于"值得被爱"，忽略了付出方式是否被对方需要。',
+    '2) 个体经验普遍化：博主的单一故事不能覆盖所有关系，但被包装成了普世真理。',
+    '3) 二元对立：把"独立 vs 依赖"对立化，忽略了健康的"互相依赖"。',
+    '4) 责任转嫁：把亲密关系问题归因为"对方不够好"，回避了自我审视。',
+    '5) 情绪结论：用愤怒/委屈下结论，而不是用事实和边界做判断。',
+    '',
+    '【我们的差异化切口】',
+    '▸ 不站男女对立 → 站"自我成长"这一边',
+    '▸ 不喊口号 → 给具体可执行的"下一步动作"',
+    '▸ 不卖惨 → 用清醒语气带出情感共鸣'
+  ].join('\n');
+
+  // ③ 现代婚姻解法：3 段式
+  const fix = [
+    '【现代婚姻的 3 个解法】',
+    '',
+    '① 重新定义"付出"',
+    '   付出 ≠ 牺牲。付出是"对方能接住的、有回应的事"。',
+    '   自检：你给的，是不是对方能感受到的？',
+    '',
+    '② 建立"个人边界"',
+    '   三句话公式：',
+    '   "我可以接受……"',
+    '   "我不能接受……"',
+    '   "如果你……，我会……"',
+    '   把模糊变成具体。',
+    '',
+    '③ 启动"经济独立 + 精神独立"双轨',
+    '   钱 = 离开任何关系的底气',
+    '   精神独立 = 即使在一起，也保留"随时能转身"的能力',
+    '   不是不爱，是有爱的能力 + 有离开的能力'
+  ].join('\n');
+
+  // ④ 60-90 秒口播脚本（适配 75 秒默认）
+  const script = [
+    '【60–90 秒口播脚本 · 约 75 秒 · 约 220 字】',
+    '',
+    '（钩子 · 5 秒）',
+    '"我养你"这句话，你以为是情话，其实是控制。',
+    '',
+    '（痛点 · 15 秒）',
+    '一个女人放弃工作、放弃社交、放弃自己，最后换来一句：',
+    '"你不就在家带个孩子吗？"',
+    '你那一刻才明白：你把自己活没了。',
+    '',
+    '（观点 · 30 秒）',
+    '我做了十年女性内容，见过太多这样的故事。',
+    '今天我想告诉你一个真相——',
+    '婚姻里最值钱的，不是他爱不爱你，是你有没有随时能走的能力。',
+    '钱，是底气；精神独立，是后路。',
+    '这两样东西，比任何承诺都管用。',
+    '',
+    '（行动 · 20 秒）',
+    '从今天起，三件事你立刻去做：',
+    '一，存一笔"只属于自己的钱"，谁都不能动；',
+    '二，每天给自己 30 分钟，做只属于自己的事；',
+    '三，对消耗你的人，说一次"不"。',
+    '',
+    '（收尾 · 5 秒）',
+    '清醒地爱，比糊涂地忍，活得高级。'
+  ].join('\n');
+
+  return { view, flaw, fix, script };
+};
+
+/**
+ * 选题生成器：基于"低粉爆款"特征生成情感赛道候选
+ */
+window.generateTopics = function () {
+  const templates = [
+    {
+      title: '结婚后才知道：婆婆不是妈',
+      angle: '重新定义"婆媳关系"的边界',
+      hook: '一个动作：把婆婆当"客户"，客气但有距离。',
+      tags: ['婆媳', '边界感'],
+      heat: 8.9
+    },
+    {
+      title: '"我养你"是世上最毒的情话',
+      angle: '主动放弃经济权 = 主动交出话语权',
+      hook: '钱是底气，不是数字。',
+      tags: ['独立', '女性成长'],
+      heat: 9.4
+    },
+    {
+      title: '离婚不丢人，困在错的婚姻里才丢人',
+      angle: '离婚是止损，不是失败',
+      hook: '比起"离过婚的女人"，更丢人的是"一直在忍的女人"。',
+      tags: ['离婚', '止损'],
+      heat: 9.2
+    },
+    {
+      title: '老公冷暴力，不说话比吵架更可怕',
+      angle: '冷暴力是冷处理你这个人',
+      hook: '看清一个人不是听他怎么说，看他怎么在你最需要时选择消失。',
+      tags: ['冷暴力', '止损'],
+      heat: 9.1
+    },
+    {
+      title: '女人最高级的活法：经济独立 + 精神独立',
+      angle: '双轨独立才有真正选择权',
+      hook: '不是不爱，是有爱的能力 + 有离开的能力。',
+      tags: ['独立', '女性成长'],
+      heat: 9.0
+    },
+    {
+      title: '结婚 5 年，我才看清老公"沉默"的意思',
+      angle: '沉默不是大度，是不在乎',
+      hook: '不在乎你的人，不是忙，是你不重要。',
+      tags: ['婚姻', '止损'],
+      heat: 8.8
+    }
+  ];
+  return templates;
+};
+</script>
+<script>
+/* ============== 对白的工作台 · 交互逻辑 ============== */
+(function () {
+  'use strict';
+
+  // ===== 初始化日期 =====
+  function todayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const weeks = ['日', '一', '二', '三', '四', '五', '六'];
+    return `${y}年${m}月${day}日 · 周${weeks[d.getDay()]}`;
+  }
+  const elToday = document.getElementById('todayDate');
+  if (elToday) elToday.textContent = todayStr();
+
+  // ===== 侧边栏切换 =====
+  const navItems = document.querySelectorAll('.nav-item');
+  const panels = document.querySelectorAll('.panel');
+  function switchTab(name) {
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.tab === name));
+    panels.forEach(p => p.classList.toggle('active', p.id === name));
+    if (name === 'topic') renderTopics();
+    if (name === 'plan') renderTasks();
+    if (name === 'read') renderBooks();
+    if (name === 'review') renderReviews();
+  }
+  navItems.forEach(n => n.addEventListener('click', e => { e.preventDefault(); switchTab(n.dataset.tab); }));
+
+  // 工具按钮跨模块跳转
+  document.querySelectorAll('[data-tool]').forEach(b => {
+    b.addEventListener('click', () => switchTab(b.dataset.tool));
+  });
+
+  // ===== LocalStorage 封装 =====
+  const KEY = {
+    tasks: 'duibai.tasks',
+    topics: 'duibai.topics.date',
+    scripts: 'duibai.scripts',
+    books: 'duibai.books',
+    reviews: 'duibai.reviews',
+    yoga: 'duibai.yoga.link'
+  };
+  function lsGet(k, fallback) {
+    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; }
+    catch (e) { return fallback; }
+  }
+  function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+  // ===== 任务清单 =====
+  const taskList = document.getElementById('taskList');
+  function renderTasks() {
+    const tasks = lsGet(KEY.tasks, [
+      { id: 1, text: '写今日爆款文案（抖音 + 视频号）', done: false },
+      { id: 2, text: '读书会共读 + 群分享总结', done: false },
+      { id: 3, text: '知识星球更新 1 篇', done: false },
+      { id: 4, text: '选题灵感库收集 3 条', done: false },
+      { id: 5, text: '拆解 1 条爆款视频结构', done: false },
+      { id: 6, text: '知识卡片整理归档', done: false }
+    ]);
+    if (!localStorage.getItem(KEY.tasks)) lsSet(KEY.tasks, tasks);
+
+    taskList.innerHTML = '';
+    let done = 0;
+    tasks.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'task-item';
+      li.innerHTML = `
+        <span class="task-check ${t.done ? 'done' : ''}" data-id="${t.id}">${t.done ? '✓' : ''}</span>
+        <span class="task-text ${t.done ? 'done' : ''}">${t.text}</span>
+        <button class="task-del" data-del="${t.id}">✕</button>
+      `;
+      taskList.appendChild(li);
+      if (t.done) done++;
+    });
+    document.getElementById('todayProgress').textContent = `${done}/${tasks.length} 已完成`;
+  }
+  taskList.addEventListener('click', e => {
+    const tasks = lsGet(KEY.tasks, []);
+    const id = parseInt(e.target.dataset.id || e.target.dataset.del || '0');
+    if (e.target.classList.contains('task-check')) {
+      const t = tasks.find(x => x.id === id);
+      if (t) { t.done = !t.done; lsSet(KEY.tasks, tasks); renderTasks(); }
+    } else if (e.target.classList.contains('task-del')) {
+      lsSet(KEY.tasks, tasks.filter(x => x.id !== id));
+      renderTasks();
+    }
+  });
+
+  // 生成今日计划
+  document.getElementById('genTodayPlan').addEventListener('click', () => {
+    const plan = [
+      '写今日爆款文案（抖音 + 视频号）',
+      '读书会共读 + 群分享总结',
+      '知识星球更新 1 篇',
+      '选题灵感库收集 3 条',
+      '拆解 1 条爆款视频结构',
+      '知识卡片整理归档'
+    ];
+    const tasks = plan.map((p, i) => ({ id: Date.now() + i, text: p, done: false }));
+    lsSet(KEY.tasks, tasks);
+    renderTasks();
+    flash('已为你生成今日 6 项任务 ✨');
+  });
+
+  // ===== 选题灵感 =====
+  const topicList = document.getElementById('topicList');
+  function renderTopics() {
+    const lastDate = localStorage.getItem(KEY.topics);
+    const today = new Date().toDateString();
+    let topics;
+    if (lastDate === today) {
+      topics = lsGet('duibai.topics.data', window.generateTopics());
+    } else {
+      topics = window.generateTopics();
+      lsSet('duibai.topics.data', topics);
+      localStorage.setItem(KEY.topics, today);
+    }
+    topicList.innerHTML = '';
+    topics.forEach((t, i) => {
+      const li = document.createElement('li');
+      li.className = 'topic-item';
+      li.innerHTML = `
+        <div class="topic-title">${i + 1}. ${t.title}</div>
+        <div class="topic-meta">
+          <span>🔥 热度 ${t.heat}</span>
+          <span>🎯 ${t.angle}</span>
+          <span>${t.tags.map(x => '#' + x).join(' ')}</span>
+        </div>
+        <div class="topic-actions">
+          <button class="ghost-btn" data-send="${i}">✍️ 去写脚本</button>
+        </div>
+      `;
+      topicList.appendChild(li);
+    });
+  }
+  topicList.addEventListener('click', e => {
+    if (e.target.dataset.send !== undefined) {
+      const topics = lsGet('duibai.topics.data', []);
+      const t = topics[parseInt(e.target.dataset.send)];
+      if (t) {
+        switchTab('write');
+        document.getElementById('writeTopic').value = t.title;
+        flash('已把选题送到写作模块 ✨');
+      }
+    }
+  });
+  document.getElementById('fetchTopics').addEventListener('click', () => {
+    localStorage.removeItem(KEY.topics);
+    renderTopics();
+    flash('已刷新今日选题 ✨');
+  });
+
+  // ===== 写作模块 =====
+  const chips = document.querySelectorAll('#stanceChips .chip');
+  chips.forEach(c => c.addEventListener('click', () => c.classList.toggle('on')));
+  document.getElementById('writeGo').addEventListener('click', () => {
+    const topic = document.getElementById('writeTopic').value.trim();
+    const duration = document.getElementById('writeDuration').value;
+    const style = document.getElementById('writeStyle').value;
+    const stances = Array.from(document.querySelectorAll('#stanceChips .chip.on')).map(c => c.dataset.stance);
+
+    const wordCount = Math.round(duration * 3); // 约 3 字/秒
+    const script = generateScript({ topic, duration, style, stances, wordCount });
+    document.getElementById('writeOutput').value = script;
+    flash('已生成 60–90 秒口播脚本 ✨');
+  });
+  document.getElementById('copyScript').addEventListener('click', () => {
+    const txt = document.getElementById('writeOutput').value;
+    if (!txt) return;
+    navigator.clipboard.writeText(txt).then(() => flash('已复制到剪贴板'));
+  });
+  document.getElementById('saveScript').addEventListener('click', () => {
+    const txt = document.getElementById('writeOutput').value;
+    const topic = document.getElementById('writeTopic').value || '未命名脚本';
+    if (!txt) return flash('没有可归档的内容');
+    const arr = lsGet(KEY.scripts, []);
+    arr.unshift({ id: Date.now(), topic, content: txt, time: new Date().toLocaleString() });
+    lsSet(KEY.scripts, arr.slice(0, 50));
+    flash('已归档到本地知识库 💾');
+  });
+
+  // ===== 爆款二创 =====
+  const remixBtn = document.getElementById('remixGo');
+  if (remixBtn) {
+    remixBtn.addEventListener('click', () => {
+      const raw = document.getElementById('remixInput').value.trim();
+      if (!raw) return flash('请先粘贴博主视频转写文字');
+      const { view, flaw, fix, script } = window.remixTemplate(raw);
+      const set = (id, txt) => {
+        const el = document.getElementById(id);
+        el.textContent = txt;
+        el.classList.remove('empty');
+      };
+      set('outView', view);
+      set('outFlaw', flaw);
+      set('outFix', fix);
+      set('outScript', script);
+      flash('已生成 4 段二创结果 🚀');
+    });
+  }
+  document.getElementById('clearRemix').addEventListener('click', () => {
+    document.getElementById('remixInput').value = '';
+    ['outView', 'outFlaw', 'outFix', 'outScript'].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = '尚未生成';
+      el.classList.add('empty');
+    });
+  });
+  document.getElementById('copyRemix').addEventListener('click', () => {
+    const txt = document.getElementById('outScript').textContent;
+    if (!txt || txt === '尚未生成') return;
+    navigator.clipboard.writeText(txt).then(() => flash('脚本已复制'));
+  });
+  document.getElementById('sendRemixToWrite').addEventListener('click', () => {
+    const txt = document.getElementById('outScript').textContent;
+    if (!txt || txt === '尚未生成') return;
+    switchTab('write');
+    document.getElementById('writeOutput').value = txt;
+    flash('已送到写作模块，可继续微调 ✨');
+  });
+
+  // ===== 内容复盘 =====
+  function renderReviews() {
+    const tbody = document.querySelector('#reviewTable tbody');
+    const data = lsGet(KEY.reviews, []);
+    tbody.innerHTML = data.length
+      ? data.map(r => `<tr><td>${r.date}</td><td>${r.title}</td><td>${r.views}</td><td>${r.rate}%</td><td>${r.complete}%</td><td>${r.judge}</td><td>${r.note || ''}</td></tr>`).join('')
+      : '<tr><td colspan="7" style="text-align:center;color:#8a7355;padding:20px">还没有复盘数据，点右上角新增 →</td></tr>';
+  }
+  document.getElementById('newReview').addEventListener('click', () => {
+    const title = prompt('视频标题：'); if (!title) return;
+    const views = prompt('播放量（数字）：', '0') || '0';
+    const rate = prompt('互动率（百分比数字）：', '5') || '5';
+    const complete = prompt('完播率（百分比数字）：', '30') || '30';
+    const judge = prompt('判断（爆 / 平 / 差）：', '平') || '平';
+    const note = prompt('备注（可选）：', '') || '';
+    const arr = lsGet(KEY.reviews, []);
+    arr.unshift({ date: new Date().toLocaleDateString(), title, views, rate, complete, judge, note });
+    lsSet(KEY.reviews, arr);
+    renderReviews();
+    flash('已保存复盘 📊');
+  });
+
+  // ===== 为己读书 =====
+  const bookList = document.getElementById('bookList');
+  function renderBooks() {
+    const books = lsGet(KEY.books, [
+      { name: '亲密关系', progress: 32 },
+      { name: '也许你该找个人聊聊', progress: 12 }
+    ]);
+    if (!localStorage.getItem(KEY.books)) lsSet(KEY.books, books);
+    bookList.innerHTML = '';
+    books.forEach(b => {
+      const li = document.createElement('li');
+      li.className = 'book-item';
+      li.innerHTML = `<span class="book-name">📖 ${b.name}</span><span class="book-progress">${b.progress}%</span>`;
+      bookList.appendChild(li);
+    });
+  }
+  document.getElementById('newBook').addEventListener('click', () => {
+    const name = prompt('书名：'); if (!name) return;
+    const books = lsGet(KEY.books, []);
+    books.unshift({ name, progress: 0 });
+    lsSet(KEY.books, books);
+    renderBooks();
+  });
+  document.getElementById('saveBookNote').addEventListener('click', () => {
+    const note = document.getElementById('bookNote').value.trim();
+    if (!note) return flash('没有可保存的笔记');
+    const all = lsGet('duibai.booknotes', []);
+    all.unshift({ time: new Date().toLocaleString(), content: note });
+    lsSet('duibai.booknotes', all.slice(0, 100));
+    document.getElementById('bookNote').value = '';
+    flash('读书笔记已保存 🗒️');
+  });
+
+  // ===== 瑜伽/英语 =====
+  const yogaLink = document.getElementById('yogaLink');
+  if (yogaLink) {
+    yogaLink.value = lsGet(KEY.yoga, '');
+    yogaLink.addEventListener('change', () => lsSet(KEY.yoga, yogaLink.value));
+  }
+
+  // ===== 脚本生成器（基于模板拼接） =====
+  function generateScript({ topic, duration, style, stances, wordCount }) {
+    const topicLine = topic || '一个让所有女人深夜崩溃的真相';
+    const stance = stances[0] || '女性成长';
+    const hooks = {
+      '犀利': '醒醒吧，亲爱的。',
+      '温柔': '你值得被好好对待。',
+      '对话感': '姐妹，今天咱们说点真话。',
+      '观点输出': '我做了十年女性内容，今天必须告诉你——',
+      '故事化': '我有个朋友，最近她跟我说了一件事。'
+    };
+    const hook = hooks[style] || hooks['观点输出'];
+
+    const sections = {
+      60: [
+        `（钩子 5s）${hook}`,
+        `（痛点 18s）${topicLine}这件事，表面上是说"你该怎么办"，其实是在问你"你到底要不要继续委屈自己"。`,
+        `（观点 22s）我见过太多女人在这件事上耗了十年，最后什么都没剩下。所以今天给你一个动作：先停下来问自己——"我还能不能接受？"`,
+        `（行动 12s）如果答案是能，那就留下；如果不能，就给自己 3 个月时间，做好离开的准备。`,
+        `（收尾 3s）清醒地爱，比糊涂地忍，活得高级。`
+      ],
+      75: [
+        `（钩子 5s）${hook}`,
+        `（痛点 22s）${topicLine}。很多姐妹私信我说，每次想到这件事就失眠，焦虑，甚至开始怀疑自己是不是不值得被爱。`,
+        `（观点 28s）但我想告诉你，${stance}不是让你"离婚"或"忍耐"，而是让你看清楚——你在这段关系里的位置。`,
+        `你能接受，就继续；你不能接受，就给自己设一个期限。`,
+        `（行动 16s）从今天起，三件事你立刻去做：`,
+        `一，存一笔只属于自己的钱；`,
+        `二，每天给自己 30 分钟；`,
+        `三，对消耗你的人说一次"不"。`,
+        `（收尾 4s）女人最大的安全感，永远来自你自己。`
+      ],
+      90: [
+        `（钩子 6s）${hook}`,
+        `（痛点 26s）${topicLine}。这件事困扰你的不是问题本身，是你被一种"应该"困住了——"我应该懂事""我应该忍耐""我应该为孩子忍一下"。`,
+        `可是你想过没有？`,
+        `你一辈子都在为别人"应该"，谁来为你"应该"？`,
+        `（观点 32s）我做情感内容十年，发现一个真相：所有困在关系里的女人，都有一个共同点——她们弄丢了自己。`,
+        `所以今天给你一个判断标准：`,
+        `如果这件事让你三个月内变得更焦虑、更自卑、更不想出门，那就是错的关系。`,
+        `不是因为"对方不好"，是因为这段关系里的你，正在消失。`,
+        `（行动 20s）停止消耗，从三件事开始：`,
+        `一，重新工作或找到自己的"价值出口"；`,
+        `二，建立经济账户，每月存一点"离开基金"；`,
+        `三，把"为了孩子忍"这句话从你脑子里删掉。`,
+        `孩子需要的不是一个忍的妈妈，是一个快乐的妈妈。`,
+        `（收尾 6s）你不需要拯救一段婚姻，你只需要拯救你自己。当你足够稳，好的关系会自动来找你。`
+      ]
+    };
+
+    return sections[duration].join('\n\n');
+  }
+
+  // ===== 简单 toast =====
+  function flash(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+      padding: '10px 20px', background: 'rgba(58, 46, 31, 0.9)', color: '#fdf6e3',
+      borderRadius: '24px', fontSize: '13px', zIndex: 9999, opacity: 0,
+      transition: 'opacity 0.2s'
+    });
+    document.body.appendChild(t);
+    requestAnimationFrame(() => { t.style.opacity = 1; });
+    setTimeout(() => { t.style.opacity = 0; setTimeout(() => t.remove(), 300); }, 1800);
+  }
+
+  // ===== 首次渲染 =====
+  renderTasks();
+})();
+</script>
+</body>
+</html>
